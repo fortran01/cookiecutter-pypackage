@@ -63,16 +63,11 @@ Generate a Python package project::
 Then:
 
 * Create a repo and put it there.
-* Add the repo to your Travis-CI_ account.
 * Install the dev requirements into a virtualenv. (``pip install -r requirements_dev.txt``)
 * Register_ your project with PyPI.
-* Run the Travis CLI command ``travis encrypt --add deploy.password`` to encrypt your PyPI password in Travis config
-  and activate automated deployment on PyPI when you push a new tag to master branch.
-* Add the repo to your `Read the Docs`_ account + turn on the Read the Docs service hook.
+* Add the PyPI API token as a Github secret PYPI_API_TOKEN
 * Release your package by pushing a new tag to master.
-* Add a ``requirements.txt`` file that specifies the packages you will need for
-  your project and their versions. For more info see the `pip docs for requirements files`_.
-* Activate your project on `pyup.io`_.
+* Add the project requirements to the ``install_requires`` list in ``setup.py``.
 
 .. _`pip docs for requirements files`: https://pip.pypa.io/en/stable/user_guide/#requirements-files
 .. _Register: https://packaging.python.org/tutorials/packaging-projects/#uploading-the-distribution-archives
