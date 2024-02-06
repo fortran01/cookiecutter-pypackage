@@ -26,13 +26,37 @@
 
 {% if is_open_source %}
 * Free software: {{ cookiecutter.open_source_license }}
-* Documentation: https://{{ cookiecutter.project_slug | replace("_", "-") }}.readthedocs.io.
 {% endif %}
 
 Features
 --------
 
 * TODO
+
+Requirements
+------------
+
+* TODO
+
+Usage
+-----
+
+* TODO
+
+Development
+-----------
+
+- Make utility ([Make for Windows](https://gnuwin32.sourceforge.net/packages/make.htm), Make for Linux and Mac is usually pre-installed)
+
+Set up the environment using the provided Makefile. Follow these steps:
+
+1. Ensure you have `make` installed on your system. You can check this by running `make --version` in your terminal. Install or update `make` if needed.
+2. Install the necessary dependencies by running `make install` or `make all`.
+3. Create a Python virtual environment by running `python3 -m venv --prompt {{ cookiecutter.project_slug }} venv`. Activate it by running `source venv/bin/activate`.
+4. Verify the installation by running `{{ cookiecutter.project_slug }} --version`. If the tool is installed correctly, it should display the version number.
+5. Run the tool for example by running `python -m {{ cookiecutter.project_slug }} --help`.
+6. Exit the virtual environment by running `deactivate`.
+
 
 Credits
 -------

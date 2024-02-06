@@ -1,101 +1,214 @@
-.PHONY: clean clean-build clean-pyc clean-test coverage dist docs help install lint lint/flake8
-        {%- if cookiecutter.use_black == 'y' %} lint/black{% endif %}
-.DEFAULT_GOAL := help
+# https://github.com/httpie/cli/blob/master/Makefile
 
-define BROWSER_PYSCRIPT
-import os, webbrowser, sys
+.PHONY: build
 
-from urllib.request import pathname2url
+PROJECT_NAME={{ cookiecutter.project_slug }}
+ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+VERSION=$(shell grep __version__ $(PROJECT_NAME)/__init__.py)
+H1="\n\n\033[0;32m\#\#\# "
+H1END=" \#\#\# \033[0m\n"
 
-webbrowser.open("file://" + pathname2url(os.path.abspath(sys.argv[1])))
-endef
-export BROWSER_PYSCRIPT
+# Only used to create our venv.
+SYSTEM_PYTHON=python3
 
-define PRINT_HELP_PYSCRIPT
-import re, sys
+VENV_ROOT=venv
+VENV_BIN=$(VENV_ROOT)/bin
+VENV_PIP=$(VENV_BIN)/pip3
+VENV_PYTHON=$(VENV_BIN)/python
 
-for line in sys.stdin:
-	match = re.match(r'^([a-zA-Z_-]+):.*?## (.*)$$', line)
-	if match:
-		target, help = match.groups()
-		print("%-20s %s" % (target, help))
-endef
-export PRINT_HELP_PYSCRIPT
 
-BROWSER := python -c "$$BROWSER_PYSCRIPT"
+export PATH := $(VENV_BIN):$(PATH)
 
-help:
-	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
-clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
 
-clean-build: ## remove build artifacts
-	rm -fr build/
-	rm -fr dist/
-	rm -fr .eggs/
-	find . -name '*.egg-info' -exec rm -fr {} +
-	find . -name '*.egg' -exec rm -f {} +
+default: list-tasks
 
-clean-pyc: ## remove Python file artifacts
-	find . -name '*.pyc' -exec rm -f {} +
-	find . -name '*.pyo' -exec rm -f {} +
-	find . -name '*~' -exec rm -f {} +
-	find . -name '__pycache__' -exec rm -fr {} +
+###############################################################################
+# Default task to get a list of tasks when `make' is run without args.
+# <https://stackoverflow.com/questions/4219255>
+###############################################################################
 
-clean-test: ## remove test and coverage artifacts
-	rm -fr .tox/
-	rm -f .coverage
-	rm -fr htmlcov/
-	rm -fr .pytest_cache
+list-tasks:
+	@echo Available tasks:
+	@echo ----------------
+	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | grep -E -v -e '^[^[:alnum:]]' -e '^$@$$'
+	@echo
 
-lint/flake8: ## check style with flake8
-	flake8 {{ cookiecutter.project_slug }} tests
+###############################################################################
+# Installation
+###############################################################################
 
-{%- if cookiecutter.use_black == 'y' %}
-lint/black: ## check style with black
-	black --check {{ cookiecutter.project_slug }} tests
-{%- endif %}
+all: uninstall-$(PROJECT_NAME) install test
 
-lint: lint/flake8{%- if cookiecutter.use_black == 'y' %} lint/black{%- endif %} ## check style
+install: venv install-reqs
 
-test: ## run tests quickly with the default Python
-{%- if cookiecutter.use_pytest == 'y' %}
-	pytest
-{%- else %}
-	python setup.py test
-{%- endif %}
+install-reqs:
+	@echo $(H1)Updating package tools$(H1END)
+	$(VENV_PIP) install --upgrade pip wheel build
 
-test-all: ## run tests on every Python version with tox
-	tox
+	@echo $(H1)Installing dev requirements$(H1END)
+	$(VENV_PIP) install --upgrade '.[dev]' '.[test]'
 
-coverage: ## check code coverage quickly with the default Python
-{%- if cookiecutter.use_pytest == 'y' %}
-	coverage run --source {{ cookiecutter.project_slug }} -m pytest
-{%- else %}
-	coverage run --source {{ cookiecutter.project_slug }} setup.py test
-{%- endif %}
-	coverage report -m
-	coverage html
-	$(BROWSER) htmlcov/index.html
+	@echo $(H1)Installing madb$(H1END)
+	$(VENV_PIP) install --upgrade --editable .
 
-docs: ## generate Sphinx HTML documentation, including API docs
-	rm -f docs/{{ cookiecutter.project_slug }}.rst
-	rm -f docs/modules.rst
-	sphinx-apidoc -o docs/ {{ cookiecutter.project_slug }}
-	$(MAKE) -C docs clean
-	$(MAKE) -C docs html
-	$(BROWSER) docs/_build/html/index.html
+	@echo
 
-servedocs: docs ## compile the docs watching for changes
-	watchmedo shell-command -p '*.rst' -c '$(MAKE) -C docs html' -R -D .
+clean:
+	@echo $(H1)Cleaning up$(H1END)
+	rm -rf $(VENV_ROOT)
+	# Remove symlink for virtualenvwrapper, if we’ve created one.
+	[ -n "$(WORKON_HOME)" -a -L "$(WORKON_HOME)/$(PROJECT_NAME)" -a -f "$(WORKON_HOME)/$(PROJECT_NAME)" ] && rm $(WORKON_HOME)/$(PROJECT_NAME) || true
+	rm -rf *.egg dist build .coverage .cache .pytest_cache $(PROJECT_NAME).egg-info
+	find . -name '__pycache__' -delete -o -name '*.pyc' -delete
+	@echo
+	
+venv:
+	@echo $(H1)Creating a Python environment $(VENV_ROOT) $(H1END)
 
-release: dist ## package and upload a release
-	twine upload dist/*
+	$(SYSTEM_PYTHON) -m venv --prompt $(PROJECT_NAME) $(VENV_ROOT)
 
-dist: clean ## builds source and wheel package
-	python setup.py sdist
-	python setup.py bdist_wheel
-	ls -l dist
+	@echo
+	@echo done.
+	@echo
+	@echo To active it manually, run:
+	@echo
+	@echo "    source $(VENV_BIN)/activate"
+	@echo
+	@echo '(learn more: https://docs.python.org/3/library/venv.html)'
+	@echo
+	@if [ -n "$(WORKON_HOME)" ]; then \
+		echo $(ROOT_DIR) >  $(VENV_ROOT)/.project; \
+		if [ ! -d $(WORKON_HOME)/$(PROJECT_NAME) -a ! -L $(WORKON_HOME)/$(PROJECT_NAME) ]; then \
+			ln -s $(ROOT_DIR)/$(VENV_ROOT) $(WORKON_HOME)/$(PROJECT_NAME) ; \
+			echo ''; \
+			echo 'Since you use virtualenvwrapper, we created a symlink'; \
+			echo 'so you can also use "workon $(PROJECT_NAME)" to activate the venv.'; \
+			echo ''; \
+		fi; \
+	fi
 
-install: clean ## install the package to the active Python's site-packages
-	python setup.py install
+###############################################################################
+# Testing
+###############################################################################
+
+test:
+	@echo $(H1)Running tests$(HEADER_EXTRA)$(H1END)
+	$(VENV_BIN)/python -m pytest $(COV)
+	@echo
+
+test-cover: COV=--cov=$(PROJECT_NAME) --cov=tests
+test-cover: HEADER_EXTRA=' (with coverage)'
+test-cover: test
+
+# test-all is meant to test everything — even this Makefile
+test-all: clean install test test-dist codestyle
+	@echo
+
+test-dist: test-sdist test-bdist-wheel
+	@echo
+
+
+test-sdist: clean venv
+	@echo $(H1)Testing sdist build an installation$(H1END)
+	$(VENV_PYTHON) setup.py sdist
+	$(VENV_PIP) install --force-reinstall --upgrade dist/*.gz
+	$(VENV_BIN)/{PROJECT_NAME} --version
+	@echo
+
+test-bdist-wheel: clean venv
+	@echo $(H1)Testing wheel build an installation$(H1END)
+	$(VENV_PIP) install wheel
+	$(VENV_PYTHON) setup.py bdist_wheel
+	$(VENV_PIP) install --force-reinstall --upgrade dist/*.whl
+	$(VENV_BIN)/{PROJECT_NAME} --version
+	@echo
+
+
+twine-check:
+	twine check dist/*
+
+# Kept for convenience, "make codestyle" is preferred though
+pycodestyle: codestyle
+
+
+codestyle:
+	@echo $(H1)Running flake8$(H1END)
+	@[ -f $(VENV_BIN)/flake8 ] || $(VENV_PIP) install --upgrade --editable '.[dev]'
+	$(VENV_BIN)/flake8 $(PROJECT_NAME)/ tests/ *.py
+	@echo
+
+codecov-upload:
+	@echo $(H1)Running codecov$(H1END)
+	@[ -f $(VENV_BIN)/codecov ] || $(VENV_PIP) install codecov
+	# $(VENV_BIN)/codecov --required
+	$(VENV_BIN)/codecov
+	@echo
+
+doc-check:
+	@echo $(H1)Running documentations checks$(H1END)
+	@echo Placeholder for documentation checks
+
+###############################################################################
+# Publishing to PyPi
+###############################################################################
+
+build:
+	rm -rf build/ dist/
+	$(VENV_PYTHON) -m build --sdist --wheel --outdir dist/
+
+publish: test-all publish-no-test
+
+publish-no-test:
+	@echo $(H1)Testing wheel build an installation$(H1END)
+	@echo "$(VERSION)"
+	@echo "$(VERSION)" | grep -q "dev" && echo '!!!Not publishing dev version!!!' && exit 1 || echo ok
+	make build
+	make twine-check
+	$(VENV_BIN)/twine upload --repository={PROJECT_NAME} dist/*
+	@echo
+
+###############################################################################
+# Uninstalling
+###############################################################################
+
+uninstall-$(PROJECT_NAME):
+	@echo $(H1)Uninstalling $(PROJECT_NAME)$(H1END)
+	- $(VENV_PIP) uninstall --yes $(PROJECT_NAME) &2>/dev/null
+
+	@echo "Verifying…"
+	cd .. && ! $(VENV_PYTHON) -m $(PROJECT_NAME) --version &2>/dev/null
+
+	@echo "Done"
+	@echo
+
+###############################################################################
+# Placeholder - Homebrew
+###############################################################################
+
+brew-deps:
+	@echo $(H1)Installing Homebrew dependencies$(H1END)
+	@echo Placeholder for Homebrew dependencies
+	@echo
+
+brew-test:
+	@echo $(H1)Running Homebrew tests$(H1END)
+	@echo Placeholder for Homebrew tests
+	@echo
+
+
+###############################################################################
+# Placeholder - Generated content
+###############################################################################
+
+content: man installation-docs
+
+man: 
+	@echo $(H1)Generating man pages$(H1END)
+	@echo Placeholder for man pages generation
+	@echo
+
+installation-docs:
+	@echo $(H1)Generating installation docs$(H1END)
+	@echo Placeholder for installation docs generation
+	@echo

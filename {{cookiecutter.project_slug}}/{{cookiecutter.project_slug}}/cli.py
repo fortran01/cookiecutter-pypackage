@@ -6,10 +6,20 @@ import argparse
 import sys
 {%- if cookiecutter.command_line_interface|lower == 'click' %}
 import click
+
+
+def print_version(ctx, param, value):
+    if not value or ctx.resilient_parsing:
+        return
+    from . import __version__
+    click.echo('Version ' + __version__)
+    ctx.exit()
 {%- endif %}
 
 {% if cookiecutter.command_line_interface|lower == 'click' %}
 @click.command()
+@click.option('--version', is_flag=True, callback=print_version,
+              expose_value=False, is_eager=True)
 def main(args=None):
     """Console script for {{cookiecutter.project_slug}}."""
     click.echo("Replace this message by putting your code into "
