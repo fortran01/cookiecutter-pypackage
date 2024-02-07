@@ -19,7 +19,16 @@ VENV_PYTHON=$(VENV_BIN)/python
 
 export PATH := $(VENV_BIN):$(PATH)
 
+define PRINT_HELP_PYSCRIPT
+import re, sys
 
+for line in sys.stdin:
+	match = re.match(r'^([a-zA-Z_-]+):.*?## (.*)$$', line)
+	if match:
+		target, help = match.groups()
+		print("%-20s %s" % (target, help))
+endef
+export PRINT_HELP_PYSCRIPT
 
 default: list-tasks
 
@@ -53,6 +62,9 @@ install-reqs:
 	$(VENV_PIP) install --upgrade --editable .
 
 	@echo
+
+help:
+	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
 clean:
 	@echo $(H1)Cleaning up$(H1END)
@@ -101,8 +113,7 @@ test-cover: COV=--cov=$(PROJECT_NAME) --cov=tests
 test-cover: HEADER_EXTRA=' (with coverage)'
 test-cover: test
 
-# test-all is meant to test everything — even this Makefile
-test-all: clean install test test-dist codestyle
+test-all: clean install test test-dist codestyle ## test-all is meant to test everything — even this Makefile
 	@echo
 
 test-dist: test-sdist test-bdist-wheel
@@ -148,6 +159,16 @@ codecov-upload:
 doc-check:
 	@echo $(H1)Running documentations checks$(H1END)
 	@echo Placeholder for documentation checks
+
+lint/flake8: ## check style with flake8
+	flake8 {{ cookiecutter.project_slug }} tests
+
+{%- if cookiecutter.use_black == 'y' %}
+lint/black: ## check style with black
+	black --check {{ cookiecutter.project_slug }} tests
+{%- endif %}
+
+lint: lint/flake8{%- if cookiecutter.use_black == 'y' %} lint/black{%- endif %} ## check style
 
 ###############################################################################
 # Publishing to PyPi
