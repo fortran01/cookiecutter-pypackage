@@ -24,10 +24,6 @@
 
 {{ cookiecutter.project_short_description }}
 
-{% if is_open_source %}
-* Free software: {{ cookiecutter.open_source_license }}
-{% endif %}
-
 Features
 --------
 
