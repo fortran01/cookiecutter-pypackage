@@ -4,7 +4,7 @@
 
 PROJECT_NAME={{ cookiecutter.project_slug }}
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-VERSION=$(shell grep __version__ $(PROJECT_NAME)/__init__.py)
+VERSION=$(shell sed -n "s/^__version__ = '\(.*\)'/\1/p" $(PROJECT_NAME)/__init__.py)
 H1="\n\n\033[0;32m\#\#\# "
 H1END=" \#\#\# \033[0m\n"
 
