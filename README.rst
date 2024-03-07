@@ -83,6 +83,11 @@ To test the cookiecutter locally, run:
     # cd out of the cookiecutter-pypackage project directory
     cd ..;pipx run cookiecutter -f --no-input cookiecutter-pypackage; cd python_boilerplate
 
+To generate a Python package project with your new local cookiecutter, run:
+
+    # Generate a Python package project
+    pipx run cookiecutter gh:fortran01/cookiecutter-pypackage
+
 Not Exactly What You Want?
 --------------------------
 
