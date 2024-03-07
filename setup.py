@@ -1,5 +1,35 @@
 # !/usr/bin/env python
 
+# Note: keep requirements here to ease distributions packaging
+tests_require = ["pytest"]
+
+dev_require = [
+    "pip",
+    "wheel",
+    "pytest",
+    "tox",
+    "cookiecutter>=1.4.0",
+    "pytest-cookies",
+    "alabaster==0.7.12",
+    "watchdog==0.9.0",
+]
+
+install_requires = [
+    'pip',
+]
+
+install_requires_win_only = [
+    "colorama>=0.2.4",
+]
+
+# bdist_wheel
+extras_require = {
+    "dev": dev_require,
+    "test": tests_require,
+    # https://wheel.readthedocs.io/en/latest/#defining-conditional-dependencies
+    ':sys_platform == "win32"': install_requires_win_only,
+}
+
 from distutils.core import setup
 setup(
     name='cookiecutter-pypackage',
@@ -12,6 +42,7 @@ setup(
     url='https://github.com/audreyr/cookiecutter-pypackage',
     keywords=['cookiecutter', 'template', 'package', ],
     python_requires='>=3.6',
+    extras_require=extras_require,
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
