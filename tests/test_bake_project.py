@@ -302,12 +302,12 @@ def test_bake_with_argparse_console_script_cli(cookies):
     # Now directly call the main function
     assert cli_module.main() == 0  # Assuming the CLI function returns
 
-
-@pytest.mark.parametrize("use_black,expected", [("y", True), ("n", False)])
-def test_black(cookies, use_black, expected):
-    with bake_in_temp_dir(cookies, extra_context={"use_black": use_black}) as result:
-        assert result.project.isdir()
-        requirements_path = result.project.join("requirements_dev.txt")
-        assert ("black" in requirements_path.read()) is expected
-        makefile_path = result.project.join("Makefile")
-        assert ("black --check" in makefile_path.read()) is expected
+# Moved dev requirements to setup.py
+# @pytest.mark.parametrize("use_black,expected", [("y", True), ("n", False)])
+# def test_black(cookies, use_black, expected):
+#     with bake_in_temp_dir(cookies, extra_context={"use_black": use_black}) as result:
+#         assert result.project.isdir()
+#         requirements_path = result.project.join("requirements_dev.txt")
+#         assert ("black" in requirements_path.read()) is expected
+#         makefile_path = result.project.join("Makefile")
+#         assert ("black --check" in makefile_path.read()) is expected
