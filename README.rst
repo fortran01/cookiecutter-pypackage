@@ -76,6 +76,13 @@ For more details, see the `cookiecutter-pypackage tutorial`_.
 
 .. _`cookiecutter-pypackage tutorial`: https://cookiecutter-pypackage.readthedocs.io/en/latest/tutorial.html
 
+Development
+-----------
+To test the cookiecutter locally, run:
+
+    # cd out of the cookiecutter-pypackage project directory
+    cd ..;pipx run cookiecutter -f --no-input cookiecutter-pypackage; cd python_boilerplate
+
 Not Exactly What You Want?
 --------------------------
 
