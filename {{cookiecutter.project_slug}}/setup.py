@@ -16,6 +16,7 @@ dev_require = [
     "coverage",
     "Sphinx",
     "twine",
+    "bump-my-version",
 {%- filter indent(width=4) %}
 {% if cookiecutter.command_line_interface|lower == 'click' -%}
     'click',{% endif %}
