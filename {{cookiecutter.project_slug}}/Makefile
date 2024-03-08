@@ -247,3 +247,13 @@ release:
 	esac; \
 	git push --follow-tags
 	
+###############################################################################
+# CDK
+###############################################################################
+cdk-setup:
+	@echo $(H1)Setting up CDK$(H1END)
+	npm install --save-dev aws-cdk-lib
+	npm install --save-dev aws-cdk
+	@echo $(H1)CDK setup complete$(H1END)
+	@echo Use npx cdk to run CDK commands
+	@echo

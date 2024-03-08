@@ -128,3 +128,12 @@ dmypy.json
 /httpie-*.tar.gz
 *.nupkg
 artifacts/
+
+# AWS CDK
+cdk.out/
+
+# Node modules for AWS CDK
+node_modules/
+
+# CDK context
+cdk.context.json
